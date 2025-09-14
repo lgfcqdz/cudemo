@@ -1,6 +1,7 @@
 package com.cucumber.mydemo.core;
 
 import com.cucumber.mydemo.utils.ConfigReader;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -30,7 +31,8 @@ public class DriverManager {
 
             switch (browser.toLowerCase()) {
                 case "chrome":
-
+                    // 自动下载并配置 ChromeDriver
+                    WebDriverManager.chromedriver().setup();
                     System.setProperty("webdriver.chrome.driver", DRIVER_PATH + "chromedriver.exe");
                     ChromeOptions chromeOptions = new ChromeOptions();
                     chromeOptions.addArguments("--start-maximized");
@@ -55,7 +57,13 @@ public class DriverManager {
         }
         return driver;
     }
+    public static void setupChromeDriver() {
+        // 自动下载并配置 ChromeDriver
+        WebDriverManager.chromedriver().setup();
 
+        // 然后创建 ChromeDriver 实例
+        WebDriver driver = new ChromeDriver();
+    }
     public static void quitDriver() {
         if (driver != null) {
             driver.quit();
