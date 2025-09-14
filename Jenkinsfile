@@ -23,23 +23,6 @@ pipeline {
     }
 
     stages {
-        stage('System Check') {
-            steps {
-                script {
-                    echo "当前工作空间: ${env.WORKSPACE}"
-                    bat "\"${GIT_PATH}\" --version" // 验证 Git 是否可用
-                    bat 'whoami'
-                }
-            }
-        }
-
-        stage('Network Check') {
-            steps {
-                script {
-                    bat 'echo 网络连通性测试: && ping -n 4 github.com'  // Windows ping 命令
-                }
-            }
-        }
 
         stage('Checkout') {
             steps {
@@ -71,8 +54,8 @@ pipeline {
                    bat "\"${GIT_PATH}\" branch -v"
                    bat "\"${GIT_PATH}\" log -1 --oneline"
                     } catch (Exception e) {
-                        echo "检出失败: ${e}"
-                        error "检出失败: ${e}"  // 抛出错误，终止流水线
+                        echo "check failed: ${e}"
+                        error "check out failed: ${e}"  // 抛出错误，终止流水线
                     }
                 }
             }
@@ -89,10 +72,10 @@ pipeline {
             steps {
                 script {
                     echo "TEST_TAGS: ${TEST_TAGS}"
-                    echo "报告目录: ${REPORT_DIR}"
+                    echo "report_dir: ${REPORT_DIR}"
                     bat 'mvn --version'
                     bat 'java -version'
-                    bat 'echo 当前目录: && cd'
+                    bat 'echo current directory: && cd'
                     bat 'dir /B'  // Windows 列出目录
 
                     // 创建报告目录 - Windows 方式
@@ -106,44 +89,28 @@ pipeline {
                 script {
                     // 使用 bat 替代 sh
                     bat """
-                        echo 执行测试命令...
-                        echo 标签: ${TEST_TAGS}
+                        echo excute commit...
+                        echo lable: ${TEST_TAGS}
 
                         mvn test ^
                             -Dtest=TestRunner ^
                             -Dcucumber.filter.tags="${TEST_TAGS}" ^
-                            -Dcucumber.plugin="html:${REPORT_DIR}\\report.html"
+                            -Dcucumber.plugin="pretty,html:${REPORT_DIR}/report.html"
                     """
                 }
             }
             post {
                 always {
-                    script {
-                        // 检查报告是否存在再尝试发布
-                        bat "if exist \"${REPORT_DIR}\\report.html\" (echo 报告存在) else (echo 报告不存在)"
-
-                        if (fileExists("${REPORT_DIR}\\report.html")) {
-                            publishHTML(target: [
-                                allowMissing: false,
-                                alwaysLinkToLastBuild: true,
-                                keepAll: true,
-                                reportDir: "${REPORT_DIR}",
-                                reportFiles: 'report.html',
-                                reportName: 'Test Report'
-                            ])
-                        } else {
-                            echo "警告：HTML 测试报告未生成"
-                        }
-
-                        // 检查JUnit报告 - Windows 路径
-                        junit allowEmptyResults: true,
-                              testResults: "${BASE_DIR}\\surefire-reports\\*.xml"
-
-                        // 收集日志 - Windows 路径
-                        archiveArtifacts artifacts: "${BASE_DIR}\\logs\\*.log",
-                                      allowEmptyArchive: true
+                        junit testResults: "**/target/surefire-reports/*.xml", allowEmptyResults: true
+                        publishHTML target: [
+                            allowMissing: true,
+                            alwaysLinkToLastBuild: true,
+                            keepAll: true,
+                            reportDir: "${REPORT_DIR}",
+                            reportFiles: 'report.html',
+                            reportName: 'Cucumber Report'
+                        ]
                     }
-                }
             }
         }
     }
