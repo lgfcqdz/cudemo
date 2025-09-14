@@ -12,8 +12,6 @@ import java.time.Duration;
 
 public class WaitUtils {
 
-    private static String SIKULI_BASE_URL="src/test/resource/images/sikuli";
-
     public static void waitPageLoadingCompleted(WebDriver driver) {
         if (driver == null) {
             throw new IllegalArgumentException("WebDriver 不能为 null");
