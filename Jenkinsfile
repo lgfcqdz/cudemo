@@ -10,7 +10,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'BRANCH_NAME', defaultValue: 'main1', description: '要构建的分支名称') // 添加分支参数
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: '要构建的分支名称') // 添加分支参数
         choice(name: 'TEST_TAGS', choices: ['@Smoke', '@Regression', '@All'], description: '选择测试标签')
     }
 
@@ -63,9 +63,19 @@ pipeline {
 
         stage('Build') {
             steps {
-                // Windows 使用 bat 替代 sh
-                bat 'mvn clean compile'  // 编译项目
-            }
+                    bat """
+                        set JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 ^
+                                              --add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED ^
+                                              --add-opens=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED ^
+                                              --add-opens=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED ^
+                                              --add-opens=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED ^
+                                              --add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+
+                        set MAVEN_OPTS=-Dfile.encoding=UTF-8
+
+                        mvn clean compile -Dmaven.compiler.forceJavacCompilerUse=true
+                    """
+                }
         }
 
         stage('Debug Info') {
