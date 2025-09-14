@@ -20,6 +20,10 @@ pipeline {
         TEST_TAGS = "${params.TEST_TAGS}"
         REPORT_DIR = "${BASE_DIR}\\reports"  // Windows 使用反斜杠
         GIT_PATH = "D:\\Program Files\\Git\\bin\\git.exe"
+        // 设置 Chrome 无头模式
+        CHROME_HEADLESS = "true"
+        // 设置 ChromeDriver 日志级别
+        CHROMEDRIVER_LOG_LEVEL = "INFO"
     }
 
     stages {
@@ -106,11 +110,15 @@ pipeline {
                             -Dtest=TestRunner ^
                             -Dcucumber.filter.tags="${TEST_TAGS}" ^
                             -Dcucumber.plugin="pretty,html:${REPORT_DIR}/report.html"
+                            -Dwebdriver.chrome.logfile=chromedriver.log ^
+                            -Dwebdriver.chrome.verboseLogging=true
                     """
                 }
             }
             post {
                 always {
+                        // 收集 ChromeDriver 日志
+                        archiveArtifacts artifacts: 'chromedriver.log', allowEmptyArchive: true
                         junit testResults: "**/target/surefire-reports/*.xml", allowEmptyResults: true
                         publishHTML target: [
                             allowMissing: true,
