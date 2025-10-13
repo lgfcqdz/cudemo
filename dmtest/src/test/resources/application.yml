@@ -1,0 +1,18 @@
+# 测试配置
+browser:
+  name: chrome
+  headless: false
+  timeout: 30
+  implicitWait: 10
+  explicitWait: 30
+  architecture: X64
+
+# 日志配置
+logging:
+  level:
+    com.cuber.gf: DEBUG
+    org.springframework: INFO
+
+environment:
+  baseUrl: https://www.baidu.com
+  testUrl: ${environment.base-url}/dmtest

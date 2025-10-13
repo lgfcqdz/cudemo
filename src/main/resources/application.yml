@@ -1,0 +1,34 @@
+#服务端口
+server:
+  port: 8080
+
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印SQL日志
+    map-underscore-to-camel-case: true # 下划线转驼峰
+  global-config:
+    db-config:
+      id-type: auto # 主键策略
+      logic-delete-field: deleted # 逻辑删除字段名
+      logic-delete-value: 1 # 逻辑已删除值
+      logic-not-delete-value: 0 # 逻辑未删除值
+  mapper-locations: classpath:mapper/*.xml # XML文件位置
+  type-aliases-package: com.cubautoqa.entity # 实体类包路径
+
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.101.118:3306/cudemo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: liugf
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+
+jwt:
+  secret: saasasasas
