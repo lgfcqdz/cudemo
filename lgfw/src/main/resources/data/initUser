@@ -1,0 +1,319 @@
+CREATE TABLE `user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 插入一条测试数据
+INSERT INTO `user` (`username`, `password`) VALUES ('admin', '123456');
+
+CREATE TABLE `category` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '分类ID',
+    `parent_id` BIGINT UNSIGNED DEFAULT 0 COMMENT '父分类ID',
+    `name` VARCHAR(100) NOT NULL COMMENT '分类名称',
+    `level` TINYINT DEFAULT 1 COMMENT '分类层级',
+    `sort_order` INT DEFAULT 0 COMMENT '排序值',
+    `image_url` VARCHAR(500) COMMENT '分类图片',
+    `description` VARCHAR(500) COMMENT '分类描述',
+    `is_show` TINYINT DEFAULT 1 COMMENT '是否显示：1-是，0-否',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX `idx_parent_id` (`parent_id`),
+    INDEX `idx_level` (`level`),
+    INDEX `idx_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品分类表';
+
+
+CREATE TABLE `brand` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '品牌ID',
+    `name` VARCHAR(100) NOT NULL COMMENT '品牌名称',
+    `logo` VARCHAR(500) COMMENT '品牌Logo',
+    `description` TEXT COMMENT '品牌描述',
+    `is_show` TINYINT DEFAULT 1 COMMENT '是否显示：1-是，0-否',
+    `sort_order` INT DEFAULT 0 COMMENT '排序值',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX `idx_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='品牌表';
+
+CREATE TABLE `product` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '商品ID',
+
+    -- 基础信息
+    `name` VARCHAR(200) NOT NULL COMMENT '商品名称',
+    `subtitle` VARCHAR(500) COMMENT '商品副标题',
+    `description` TEXT COMMENT '商品描述',
+    `detail_html` TEXT COMMENT '商品详情HTML',
+
+    -- 分类信息
+    `category_id` BIGINT UNSIGNED NOT NULL COMMENT '分类ID',
+    `brand_id` BIGINT UNSIGNED COMMENT '品牌ID',
+
+    -- 价格信息
+    `price` DECIMAL(15, 2) NOT NULL COMMENT '销售价格',
+    `original_price` DECIMAL(15, 2) COMMENT '原价',
+    `cost_price` DECIMAL(15, 2) COMMENT '成本价',
+    `weight` DECIMAL(10, 3) COMMENT '重量（kg）',
+    `volume` DECIMAL(10, 3) COMMENT '体积（m³）',
+
+    -- 库存信息
+    `stock_quantity` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '总库存',
+    `locked_stock` INT UNSIGNED DEFAULT 0 COMMENT '锁定库存（下单未支付）',
+    `sold_quantity` INT UNSIGNED DEFAULT 0 COMMENT '已售数量',
+    `warning_stock` INT UNSIGNED DEFAULT 10 COMMENT '库存预警值',
+
+    -- 商品标识
+    `sku` VARCHAR(100) NOT NULL UNIQUE COMMENT '商品SKU',
+    `barcode` VARCHAR(100) COMMENT '条形码',
+    `spu` VARCHAR(100) COMMENT '标准产品单位',
+
+    -- 图片信息
+    `main_image` VARCHAR(500) COMMENT '主图URL',
+    `image_gallery` JSON COMMENT '商品图册（JSON数组）',
+
+    -- 状态信息
+    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1-上架，0-下架，2-待审核',
+    `is_hot` TINYINT DEFAULT 0 COMMENT '是否热销：1-是，0-否',
+    `is_new` TINYINT DEFAULT 0 COMMENT '是否新品：1-是，0-否',
+    `is_recommend` TINYINT DEFAULT 0 COMMENT '是否推荐：1-是，0-否',
+
+    -- 销售信息
+    `view_count` INT UNSIGNED DEFAULT 0 COMMENT '浏览量',
+    `review_count` INT UNSIGNED DEFAULT 0 COMMENT '评价数',
+    `rating` DECIMAL(3, 2) DEFAULT 5.00 COMMENT '评分',
+    `sales_volume` INT UNSIGNED DEFAULT 0 COMMENT '销量',
+
+    -- 物流信息
+    `shipping_template_id` BIGINT UNSIGNED COMMENT '运费模板ID',
+    `is_free_shipping` TINYINT DEFAULT 0 COMMENT '是否包邮：1-是，0-否',
+
+    -- 时间信息
+    `publish_time` DATETIME COMMENT '上架时间',
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    -- 系统字段
+    `deleted` TINYINT DEFAULT 0 COMMENT '逻辑删除：0-未删除，1-已删除',
+    `version` INT DEFAULT 0 COMMENT '版本号（乐观锁）',
+
+    -- 索引优化
+    UNIQUE KEY `uk_sku` (`sku`),
+    INDEX `idx_category_id` (`category_id`),
+    INDEX `idx_brand_id` (`brand_id`),
+    INDEX `idx_status` (`status`),
+    INDEX `idx_price` (`price`),
+    INDEX `idx_sales_volume` (`sales_volume`),
+    INDEX `idx_created_time` (`created_time`),
+    INDEX `idx_is_hot` (`is_hot`),
+    INDEX `idx_is_new` (`is_new`),
+    INDEX `idx_is_recommend` (`is_recommend`),
+    FULLTEXT INDEX `idx_search` (`name`, `subtitle`, `description`)  -- 全文索引用于搜索
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品表';
+
+-- 插入分类数据
+INSERT INTO `category` (parent_id, name, level, sort_order) VALUES
+(0, '电子产品', 1, 1),
+(0, '服装配饰', 1, 2),
+(1, '手机', 2, 1),
+(1, '电脑', 2, 2),
+(1, '耳机', 2, 3);
+
+-- 插入品牌数据
+INSERT INTO `brand` (name, logo, description) VALUES
+('Apple', '/images/apple-logo.png', '苹果公司'),
+('Samsung', '/images/samsung-logo.png', '三星电子'),
+('Huawei', '/images/huawei-logo.png', '华为技术有限公司');
+
+-- 插入商品数据
+INSERT INTO `product` (
+    name, subtitle, category_id, brand_id, price, original_price,
+    stock_quantity, sku, main_image, status, is_hot, is_new
+) VALUES
+('iPhone 15 Pro', '全新A17 Pro芯片，钛金属设计', 3, 1, 8999.00, 9999.00, 100, 'IP15P-256G', '/images/iphone15pro.jpg', 1, 1, 1),
+('MacBook Pro 14"', 'M2 Pro芯片， Liquid视网膜XDR显示屏', 4, 1, 12999.00, 14999.00, 50, 'MBP14-M2', '/images/macbookpro14.jpg', 1, 1, 0),
+('Galaxy S23 Ultra', '2亿像素相机，S Pen手写笔', 3, 2, 6999.00, 7999.00, 80, 'GS23U-512G', '/images/s23ultra.jpg', 1, 1, 1),
+('AirPods Pro 2', '主动降噪，空间音频', 5, 1, 1899.00, 1999.00, 200, 'APP2-GEN2', '/images/airpodspro2.jpg', 1, 0, 1);
+
+
+DROP TABLE IF EXISTS `order`;
+CREATE TABLE `order` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '订单ID',
+    `order_number` VARCHAR(64) NOT NULL UNIQUE COMMENT '订单编号（可包含业务前缀）',
+    `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+    `total_amount` DECIMAL(15, 2) NOT NULL DEFAULT 0.00 COMMENT '订单总金额',
+    `discount_amount` DECIMAL(15, 2) DEFAULT 0.00 COMMENT '折扣金额',
+    `shipping_fee` DECIMAL(15, 2) DEFAULT 0.00 COMMENT '运费',
+    `actual_amount` DECIMAL(15, 2) NOT NULL DEFAULT 0.00 COMMENT '实付金额',
+
+    -- 状态字段
+    `order_status` TINYINT NOT NULL DEFAULT 1 COMMENT '订单状态：1-待支付，2-已支付，3-已发货，4-已完成，5-已取消，6-退款中，7-已退款',
+    `payment_status` TINYINT NOT NULL DEFAULT 0 COMMENT '支付状态：0-未支付，1-支付中，2-已支付，3-支付失败',
+    `delivery_status` TINYINT DEFAULT 0 COMMENT '配送状态：0-未发货，1-已发货，2-配送中，3-已签收',
+
+    -- 支付信息
+    `payment_method` VARCHAR(20) COMMENT '支付方式：alipay, wechat, bank, credit_card',
+    `payment_number` VARCHAR(64) COMMENT '支付交易号',
+    `payment_time` DATETIME COMMENT '支付时间',
+    `payment_amount` DECIMAL(15, 2) COMMENT '支付金额',
+
+    -- 配送信息
+    `shipping_address` TEXT COMMENT '收货地址JSON',
+    `receiver_name` VARCHAR(100) COMMENT '收货人姓名',
+    `receiver_phone` VARCHAR(20) COMMENT '收货人电话',
+    `shipping_company` VARCHAR(50) COMMENT '快递公司',
+    `tracking_number` VARCHAR(100) COMMENT '快递单号',
+    `shipping_time` DATETIME COMMENT '发货时间',
+    `expected_delivery_time` DATETIME COMMENT '预计送达时间',
+
+    -- 时间信息
+    `order_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '下单时间',
+    `pay_deadline_time` DATETIME COMMENT '支付截止时间',
+    `completed_time` DATETIME COMMENT '完成时间',
+    `cancel_time` DATETIME COMMENT '取消时间',
+    `refund_time` DATETIME COMMENT '退款时间',
+
+    -- 系统字段
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `deleted` TINYINT DEFAULT 0 COMMENT '逻辑删除：0-未删除，1-已删除',
+    `version` INT DEFAULT 0 COMMENT '版本号（乐观锁）',
+
+    -- 索引优化
+    UNIQUE KEY `uk_order_number` (`order_number`),
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_order_status` (`order_status`),
+    INDEX `idx_payment_status` (`payment_status`),
+    INDEX `idx_created_time` (`created_time`),
+    INDEX `idx_order_time` (`order_time`),
+    INDEX `idx_payment_time` (`payment_time`),
+    INDEX `idx_completed_time` (`completed_time`),
+    INDEX `idx_tracking_number` (`tracking_number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
+
+-- 插入测试订单数据
+INSERT INTO `order` (
+    order_number, user_id, total_amount, actual_amount,
+    order_status, payment_status, payment_method,
+    receiver_name, receiver_phone, shipping_address
+) VALUES
+('ORD202310130001', 1, 199.99, 199.99, 2, 2, 'alipay', '张三', '13800138000', '北京市海淀区xxx街道'),
+('ORD202310130002', 2, 299.50, 259.50, 1, 0, NULL, '李四', '13900139000', '上海市浦东新区xxx路'),
+('ORD202310130003', 1, 150.00, 150.00, 3, 2, 'wechat', '张三', '13800138000', '北京市海淀区xxx街道');
+
+CREATE TABLE `order_item` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY COMMENT '订单项ID',
+    `order_id` BIGINT UNSIGNED NOT NULL COMMENT '订单ID',
+    `product_id` BIGINT UNSIGNED NOT NULL COMMENT '商品ID',
+
+    -- 商品快照信息（防止商品信息变更影响订单）
+    `product_snapshot` JSON COMMENT '商品快照信息（JSON格式）',
+    `product_name` VARCHAR(200) NOT NULL COMMENT '商品名称',
+    `product_image` VARCHAR(500) COMMENT '商品图片',
+    `product_sku` VARCHAR(100) COMMENT '商品SKU',
+    `product_specs` VARCHAR(200) COMMENT '商品规格',
+
+    -- 价格信息
+    `original_price` DECIMAL(15, 2) NOT NULL COMMENT '商品原价',
+    `actual_price` DECIMAL(15, 2) NOT NULL COMMENT '实际单价',
+    `quantity` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT '购买数量',
+    `subtotal` DECIMAL(15, 2) NOT NULL COMMENT '小计金额',
+    `discount_amount` DECIMAL(15, 2) DEFAULT 0.00 COMMENT '折扣金额',
+
+    -- 库存和物流信息
+    `warehouse_id` BIGINT UNSIGNED COMMENT '仓库ID',
+    `shipping_status` TINYINT DEFAULT 0 COMMENT '发货状态：0-未发货，1-部分发货，2-已发货',
+    `shipped_quantity` INT UNSIGNED DEFAULT 0 COMMENT '已发货数量',
+
+    -- 售后信息
+    `refund_status` TINYINT DEFAULT 0 COMMENT '退款状态：0-无退款，1-退款中，2-已退款',
+    `refund_quantity` INT UNSIGNED DEFAULT 0 COMMENT '退款数量',
+    `refund_amount` DECIMAL(15, 2) DEFAULT 0.00 COMMENT '退款金额',
+
+    -- 评价信息
+    `review_status` TINYINT DEFAULT 0 COMMENT '评价状态：0-未评价，1-已评价',
+
+    -- 时间信息
+    `created_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    -- 系统字段
+    `deleted` TINYINT DEFAULT 0 COMMENT '逻辑删除：0-未删除，1-已删除',
+    `version` INT DEFAULT 0 COMMENT '版本号（乐观锁）',
+
+    -- 外键约束（可选）
+    CONSTRAINT `fk_order_item_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_order_item_product` FOREIGN KEY (`product_id`) REFERENCES `product` (`id`),
+
+    -- 索引优化
+    UNIQUE KEY `uk_order_product` (`order_id`, `product_id`, `product_sku`),
+    INDEX `idx_order_id` (`order_id`),
+    INDEX `idx_product_id` (`product_id`),
+    INDEX `idx_created_time` (`created_time`),
+    INDEX `idx_shipping_status` (`shipping_status`),
+    INDEX `idx_refund_status` (`refund_status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单项表';
+
+-- 插入订单项示例数据
+INSERT INTO `order_item` (
+    order_id, product_id, product_name, product_sku,
+    original_price, actual_price, quantity, subtotal
+) VALUES
+(1, 101, 'iPhone 15 Pro', 'IP15P-256G', 8999.00, 8999.00, 1, 8999.00),
+(1, 102, 'AirPods Pro', 'APPS-2ND', 1899.00, 1799.00, 2, 3598.00),
+(2, 103, 'MacBook Pro 14"', 'MBP14-M2', 12999.00, 11999.00, 1, 11999.00),
+(2, 104, 'USB-C 转接线', 'UBC-CABLE', 199.00, 149.00, 3, 447.00);
+
+-- 插入包含快照信息的订单项
+INSERT INTO `order_item` (
+    order_id, product_id, product_name, product_snapshot,
+    original_price, actual_price, quantity, subtotal
+) VALUES (
+    3, 105, '三星 Galaxy S23',
+    '{"brand": "Samsung", "model": "Galaxy S23", "color": "黑色", "storage": "256GB"}',
+    5999.00, 5499.00, 1, 5499.00
+);
+
+-- 为 order_item 表添加外键约束
+ALTER TABLE `order_item`
+ADD CONSTRAINT `fk_order_item_product`
+FOREIGN KEY (`product_id`) REFERENCES `product` (`id`);
+
+ALTER TABLE `order_item`
+ADD CONSTRAINT `fk_order_item_order`
+FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
+
+-- 为 product 表添加外键约束
+ALTER TABLE `product`
+ADD CONSTRAINT `fk_product_category`
+FOREIGN KEY (`category_id`) REFERENCES `category` (`id`);
+
+ALTER TABLE `product`
+ADD CONSTRAINT `fk_product_brand`
+FOREIGN KEY (`brand_id`) REFERENCES `brand` (`id`);
+
+-- 查询商品列表（带分类和品牌信息）
+SELECT
+    p.*,
+    c.name as category_name,
+    b.name as brand_name
+FROM product p
+LEFT JOIN category c ON p.category_id = c.id
+LEFT JOIN brand b ON p.brand_id = b.id
+WHERE p.status = 1 AND p.deleted = 0
+ORDER BY p.created_time DESC;
+
+-- 查询库存预警商品
+SELECT * FROM product
+WHERE stock_quantity <= warning_stock
+AND status = 1 AND deleted = 0;
+
+-- 查询热销商品
+SELECT * FROM product
+WHERE is_hot = 1 AND status = 1 AND deleted = 0
+ORDER BY sales_volume DESC;
+
+-- 更新商品销量
+UPDATE product
+SET sales_volume = sales_volume + 1, stock_quantity = stock_quantity - 1
+WHERE id = ? AND stock_quantity > 0;

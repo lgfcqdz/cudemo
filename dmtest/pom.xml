@@ -113,6 +113,7 @@
     </dependencies>
 
     <build>
+        <finalName>dmtest</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -130,6 +131,5 @@
                 </configuration>
             </plugin>
         </plugins>
-        <finalName>dmtest</finalName>
     </build>
 </project>
